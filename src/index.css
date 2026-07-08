@@ -1,0 +1,256 @@
+:root {
+  /* Colors */
+  --cofa-indigo: #1E2A52;
+  --cofa-indigo-dark: #141d3c;
+  --cofa-cream: #FBF7EF;
+  --cofa-cream-dim: #F2EBDD;
+  --cofa-marigold: #E8A33D;
+  --cofa-marigold-dark: #CC8A28;
+  --cofa-jade: #2F6F5E;
+  --cofa-clay: #B3492E;
+  --cofa-ink: #21242B;
+  --cofa-ink-soft: #5B5F6B;
+  --cofa-line: #E4DCC9;
+
+  /* Type */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--cofa-ink);
+  background: var(--cofa-cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: var(--cofa-indigo);
+}
+
+button, input, textarea, select {
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--cofa-marigold);
+  outline-offset: 2px;
+}
+
+/* ---- Reusable primitives ---- */
+
+.cofa-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+}
+
+.cofa-page--narrow {
+  max-width: 420px;
+}
+
+.cofa-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.cofa-btn:active {
+  transform: scale(0.98);
+}
+
+.cofa-btn-primary {
+  background: var(--cofa-indigo);
+  color: var(--cofa-cream);
+}
+.cofa-btn-primary:hover {
+  background: var(--cofa-indigo-dark);
+}
+.cofa-btn-primary:disabled {
+  background: #9198ab;
+  cursor: not-allowed;
+}
+
+.cofa-btn-accent {
+  background: var(--cofa-marigold);
+  color: var(--cofa-indigo-dark);
+}
+.cofa-btn-accent:hover {
+  background: var(--cofa-marigold-dark);
+}
+.cofa-btn-accent:disabled {
+  background: #e9d3ab;
+  color: #9c8156;
+  cursor: not-allowed;
+}
+
+.cofa-btn-ghost {
+  background: transparent;
+  color: var(--cofa-indigo);
+  border: 1px solid var(--cofa-line);
+}
+.cofa-btn-ghost:hover {
+  background: var(--cofa-cream-dim);
+}
+
+.cofa-btn-danger {
+  background: transparent;
+  color: var(--cofa-clay);
+  border: 1px solid var(--cofa-clay);
+}
+.cofa-btn-danger:hover {
+  background: rgba(179, 73, 46, 0.08);
+}
+
+.cofa-input, .cofa-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cofa-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--cofa-ink);
+}
+.cofa-input:focus, .cofa-textarea:focus {
+  border-color: var(--cofa-indigo);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(30, 42, 82, 0.1);
+}
+
+.cofa-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cofa-ink-soft);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cofa-field {
+  margin-bottom: var(--space-4);
+}
+
+.cofa-card {
+  background: #fff;
+  border: 1px solid var(--cofa-line);
+  border-radius: 12px;
+  padding: var(--space-5);
+}
+
+.cofa-price {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--cofa-indigo);
+}
+
+.cofa-error-text {
+  color: var(--cofa-clay);
+  font-size: 14px;
+  margin: 0 0 var(--space-3) 0;
+}
+
+.cofa-muted {
+  color: var(--cofa-ink-soft);
+}
+
+.cofa-divider {
+  border: none;
+  border-top: 1px solid var(--cofa-line);
+  margin: var(--space-5) 0;
+}
+
+.cofa-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.cofa-badge--active {
+  background: rgba(47, 111, 94, 0.12);
+  color: var(--cofa-jade);
+}
+.cofa-badge--hidden {
+  background: rgba(91, 95, 107, 0.12);
+  color: var(--cofa-ink-soft);
+}
+.cofa-badge--outofstock {
+  background: rgba(179, 73, 46, 0.12);
+  color: var(--cofa-clay);
+}
+
+/* Signature: torn/perforated tag edge on product cards */
+.cofa-tag-edge {
+  height: 10px;
+  background:
+    radial-gradient(circle at 10px 0, transparent 5px, #ffffff 5.5px) repeat-x;
+  background-size: 20px 10px;
+  margin-bottom: -1px;
+}
+
+.cofa-hero-title {
+  font-size: 48px;
+}
+
+.cofa-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.cofa-table-scroll {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .cofa-page {
+    padding: 24px 16px;
+  }
+
+  .cofa-hero-title {
+    font-size: 30px;
+  }
+
+  .cofa-product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+  }
+
+  .cofa-btn {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+}
