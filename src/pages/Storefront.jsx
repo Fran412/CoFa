@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getLabels } from '../lib/businessTypes'
+import { getTierConfig } from '../lib/subscriptionTiers'
 
 function Storefront() {
   const { slug } = useParams()
@@ -127,9 +128,11 @@ function Storefront() {
           </div>
         )}
 
-        <footer style={{ textAlign: 'center', marginTop: 56, paddingTop: 20, borderTop: '1px solid var(--cofa-line)' }}>
-          <span className="cofa-muted" style={{ fontSize: 13, fontFamily: 'var(--font-mono)' }}>Powered by CoFa</span>
-        </footer>
+        {getTierConfig(merchant).showFooterBranding && (
+          <footer style={{ textAlign: 'center', marginTop: 56, paddingTop: 20, borderTop: '1px solid var(--cofa-line)' }}>
+            <span className="cofa-muted" style={{ fontSize: 13, fontFamily: 'var(--font-mono)' }}>Powered by CoFa</span>
+          </footer>
+        )}
       </div>
     </div>
   )

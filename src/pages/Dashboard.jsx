@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabase'
 import { BUSINESS_TYPES, getLabels } from '../lib/businessTypes'
 import { computeInsights, computeTrends } from '../lib/insights'
+import { TIERS, getEffectiveTierKey, getTierConfig } from '../lib/subscriptionTiers'
+import { loadPaystackScript } from '../lib/paystack'
 
 function Dashboard() {
   const navigate = useNavigate()
@@ -18,6 +20,9 @@ function Dashboard() {
   // store settings form state
   const [showSettings, setShowSettings] = useState(false)
   const [showInsights, setShowInsights] = useState(true)
+  const [showBilling, setShowBilling] = useState(false)
+  const [subscribing, setSubscribing] = useState(false)
+  const [billingError, setBillingError] = useState('')
   const [newOrderAlert, setNewOrderAlert] = useState(false)
   const [settingsStoreName, setSettingsStoreName] = useState('')
   const [settingsBusinessType, setSettingsBusinessType] = useState('retail')
@@ -201,6 +206,14 @@ function Dashboard() {
   async function handleCsvUpload() {
     if (csvRows.length === 0) return
 
+    const tierConfig = getTierConfig(merchant)
+    if (products.length + csvRows.length > tierConfig.maxProducts) {
+      setCsvErrors([
+        `Your ${TIERS[getEffectiveTierKey(merchant)].name} plan allows up to ${tierConfig.maxProducts} ${labels.itemPlural.toLowerCase()}. You currently have ${products.length} and this upload would add ${csvRows.length} more. Upgrade in Billing, or reduce the file.`,
+      ])
+      return
+    }
+
     setCsvUploading(true)
 
     const payload = csvRows.map((r) => ({ ...r, merchant_id: merchant.id }))
@@ -288,6 +301,12 @@ function Dashboard() {
     e.preventDefault()
     if (!formName || !formPrice) {
       alert(`Name and price are required.`)
+      return
+    }
+
+    const tierConfig = getTierConfig(merchant)
+    if (!editingProduct && products.length >= tierConfig.maxProducts) {
+      alert(`Your ${TIERS[getEffectiveTierKey(merchant)].name} plan allows up to ${tierConfig.maxProducts} ${labels.itemPlural.toLowerCase()}. Upgrade in Billing to add more.`)
       return
     }
 
@@ -441,6 +460,62 @@ function Dashboard() {
     loadDashboard()
   }
 
+  async function handleSubscribe(tier) {
+    setBillingError('')
+    setSubscribing(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const email = session.user.email
+
+      await loadPaystackScript()
+
+      const initRes = await fetch('/.netlify/functions/paystack-subscribe-initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, tier, merchantId: merchant.id }),
+      })
+      const initData = await initRes.json()
+
+      if (!initRes.ok || !initData.access_code) {
+        setBillingError(initData.error || 'Could not start subscription. Please try again.')
+        setSubscribing(false)
+        return
+      }
+
+      const popup = new window.PaystackPop()
+      popup.resumeTransaction(initData.access_code, {
+        onSuccess: async (response) => {
+          const verifyRes = await fetch('/.netlify/functions/paystack-verify-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reference: response.reference, merchantId: merchant.id, tier }),
+          })
+          const verifyData = await verifyRes.json()
+
+          setSubscribing(false)
+
+          if (!verifyRes.ok || !verifyData.success) {
+            setBillingError(verifyData.error || 'Payment could not be confirmed. Contact support with reference: ' + response.reference)
+            return
+          }
+
+          loadDashboard()
+        },
+        onCancel: () => {
+          setSubscribing(false)
+        },
+        onError: (err) => {
+          setSubscribing(false)
+          setBillingError('Payment failed: ' + (err?.message || 'please try again.'))
+        },
+      })
+    } catch (err) {
+      setSubscribing(false)
+      setBillingError(err.message)
+    }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     navigate('/login')
@@ -471,9 +546,12 @@ function Dashboard() {
               </a>
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button onClick={() => setShowInsights((s) => !s)} className="cofa-btn cofa-btn-ghost" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'var(--cofa-cream)' }}>
               {showInsights ? 'Hide insights' : 'Insights'}
+            </button>
+            <button onClick={() => setShowBilling((s) => !s)} className="cofa-btn cofa-btn-ghost" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'var(--cofa-cream)' }}>
+              {showBilling ? 'Close billing' : 'Billing'}
             </button>
             <button onClick={() => setShowSettings((s) => !s)} className="cofa-btn cofa-btn-ghost" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'var(--cofa-cream)' }}>
               {showSettings ? 'Close settings' : 'Store settings'}
@@ -486,6 +564,53 @@ function Dashboard() {
       </div>
 
       <div className="cofa-page">
+        {showBilling && (
+          <div className="cofa-card" style={{ marginBottom: 24 }}>
+            <h3 style={{ marginBottom: 4, color: 'var(--cofa-indigo)' }}>Billing</h3>
+            <p className="cofa-muted" style={{ fontSize: 14, marginBottom: 20 }}>
+              Current plan: <strong style={{ color: 'var(--cofa-indigo)' }}>{TIERS[getEffectiveTierKey(merchant)].name}</strong>
+              {merchant.subscription_status === 'past_due' && (
+                <span className="cofa-badge cofa-badge--outofstock" style={{ marginLeft: 8 }}>Payment failed - update card</span>
+              )}
+              {merchant.subscription_status === 'cancelled' && (
+                <span className="cofa-badge cofa-badge--hidden" style={{ marginLeft: 8 }}>Subscription ended</span>
+              )}
+            </p>
+
+            {billingError && <p className="cofa-error-text">{billingError}</p>}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+              {Object.entries(TIERS).map(([key, config]) => {
+                const isCurrent = getEffectiveTierKey(merchant) === key
+                return (
+                  <div key={key} style={{ border: '1px solid var(--cofa-line)', borderRadius: 10, padding: 16 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--cofa-indigo)', marginBottom: 4 }}>{config.name}</div>
+                    <div className="cofa-price" style={{ fontSize: 18, marginBottom: 12 }}>
+                      NGN {config.price.toLocaleString()}<span className="cofa-muted" style={{ fontSize: 12, fontFamily: 'var(--font-body)' }}>/mo</span>
+                    </div>
+                    <ul style={{ margin: '0 0 16px 0', paddingLeft: 18, fontSize: 13, color: 'var(--cofa-ink-soft)' }}>
+                      <li>{config.maxProducts === Infinity ? 'Unlimited' : `Up to ${config.maxProducts}`} {labels.itemPlural.toLowerCase()}</li>
+                      <li>{config.showFooterBranding ? 'CoFa branding on storefront' : 'No CoFa branding'}</li>
+                    </ul>
+                    {isCurrent ? (
+                      <button disabled className="cofa-btn cofa-btn-ghost" style={{ width: '100%' }}>Current plan</button>
+                    ) : (
+                      <button
+                        onClick={() => handleSubscribe(key)}
+                        disabled={subscribing}
+                        className="cofa-btn cofa-btn-accent"
+                        style={{ width: '100%' }}
+                      >
+                        {subscribing ? 'Processing...' : 'Subscribe'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {newOrderAlert && (
           <div
             className="cofa-card"
