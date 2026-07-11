@@ -8,6 +8,12 @@ const PLAN_CODES = {
   growth: process.env.PAYSTACK_PLAN_GROWTH,
 }
 
+const TIER_PRICES_KOBO = {
+  basic: 300000,
+  pro: 1000000,
+  growth: 2000000,
+}
+
 export default async (req) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
@@ -30,6 +36,7 @@ export default async (req) => {
       },
       body: JSON.stringify({
         email,
+        amount: TIER_PRICES_KOBO[tier],
         plan: planCode,
         metadata: { merchantId, tier },
       }),
