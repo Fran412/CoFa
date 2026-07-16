@@ -4,6 +4,7 @@ import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabase'
 import { BUSINESS_TYPES, getLabels } from '../lib/businessTypes'
+import { NIGERIAN_BANKS } from '../lib/nigerianBanks'
 import { computeInsights, computeTrends } from '../lib/insights'
 import { TIERS, getEffectiveTierKey, getTierConfig } from '../lib/subscriptionTiers'
 import { loadPaystackScript } from '../lib/paystack'
@@ -26,6 +27,12 @@ function Dashboard() {
   const [newOrderAlert, setNewOrderAlert] = useState(false)
   const [settingsStoreName, setSettingsStoreName] = useState('')
   const [settingsBusinessType, setSettingsBusinessType] = useState('retail')
+  const [bankCode, setBankCode] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [resolvedAccountName, setResolvedAccountName] = useState('')
+  const [resolvingAccount, setResolvingAccount] = useState(false)
+  const [savingBank, setSavingBank] = useState(false)
+  const [bankError, setBankError] = useState('')
   const [settingsDescription, setSettingsDescription] = useState('')
   const [settingsWhatsapp, setSettingsWhatsapp] = useState('')
   const [settingsLogoUrl, setSettingsLogoUrl] = useState('')
@@ -100,6 +107,9 @@ function Dashboard() {
     setMerchant(merchantData)
     setSettingsStoreName(merchantData.store_name || '')
     setSettingsBusinessType(merchantData.business_type || 'retail')
+    setBankCode(merchantData.bank_code || '')
+    setAccountNumber(merchantData.account_number || '')
+    setResolvedAccountName(merchantData.account_name || '')
     setSettingsDescription(merchantData.description || '')
     setSettingsWhatsapp(merchantData.whatsapp_number || '')
     setSettingsLogoUrl(merchantData.logo_url || '')
@@ -425,6 +435,60 @@ function Dashboard() {
 
     setSettingsLogoUrl(publicUrlData.publicUrl)
     setImageUploading(false)
+  }
+
+  async function handleVerifyAccount() {
+    setBankError('')
+    setResolvedAccountName('')
+
+    if (!bankCode || !accountNumber) {
+      setBankError('Choose your bank and enter your account number.')
+      return
+    }
+
+    setResolvingAccount(true)
+
+    const res = await fetch('/.netlify/functions/paystack-resolve-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountNumber, bankCode }),
+    })
+    const data = await res.json()
+
+    setResolvingAccount(false)
+
+    if (!res.ok) {
+      setBankError(data.error || 'Could not verify this account.')
+      return
+    }
+
+    setResolvedAccountName(data.accountName)
+  }
+
+  async function handleSaveBankDetails() {
+    setBankError('')
+    setSavingBank(true)
+
+    const { data: { session } } = await supabase.auth.getSession()
+
+    const res = await fetch('/.netlify/functions/paystack-create-subaccount', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ accountNumber, bankCode }),
+    })
+    const data = await res.json()
+
+    setSavingBank(false)
+
+    if (!res.ok) {
+      setBankError(data.error || 'Could not save your bank details.')
+      return
+    }
+
+    loadDashboard()
   }
 
   async function handleSettingsSubmit(e) {
@@ -821,6 +885,66 @@ function Dashboard() {
               </button>
             </div>
           </form>
+        )}
+
+        {showSettings && (
+          <div className="cofa-card" style={{ marginBottom: 32 }}>
+            <h3 style={{ marginBottom: 4, color: 'var(--cofa-indigo)' }}>Payout details</h3>
+            <p className="cofa-muted" style={{ fontSize: 14, marginBottom: 16 }}>
+              Add your bank account so customers who "Pay now" send money directly to you (minus CoFa's 5% fee). Without this, only pay-on-delivery is available on your storefront.
+            </p>
+
+            {merchant.paystack_subaccount_code && merchant.account_name && (
+              <div style={{ marginBottom: 16, padding: 12, background: 'rgba(47, 111, 94, 0.08)', borderRadius: 8, fontSize: 14 }}>
+                Payouts active: <strong>{merchant.account_name}</strong>
+              </div>
+            )}
+
+            <div className="cofa-field">
+              <label className="cofa-label">Bank</label>
+              <select value={bankCode} onChange={(e) => { setBankCode(e.target.value); setResolvedAccountName('') }} className="cofa-input">
+                <option value="">Select your bank</option>
+                {NIGERIAN_BANKS.map((b) => (
+                  <option key={b.code} value={b.code}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="cofa-field">
+              <label className="cofa-label">Account number</label>
+              <input
+                value={accountNumber}
+                onChange={(e) => { setAccountNumber(e.target.value); setResolvedAccountName('') }}
+                className="cofa-input"
+                maxLength={10}
+              />
+            </div>
+
+            {bankError && <p className="cofa-error-text">{bankError}</p>}
+
+            {resolvedAccountName ? (
+              <>
+                <div style={{ marginBottom: 16, padding: 12, background: 'var(--cofa-cream-dim)', borderRadius: 8, fontSize: 14 }}>
+                  Account name: <strong>{resolvedAccountName}</strong>
+                </div>
+                <button
+                  onClick={handleSaveBankDetails}
+                  disabled={savingBank}
+                  className="cofa-btn cofa-btn-primary"
+                >
+                  {savingBank ? 'Saving...' : 'Confirm and save'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleVerifyAccount}
+                disabled={resolvingAccount}
+                className="cofa-btn cofa-btn-ghost"
+              >
+                {resolvingAccount ? 'Verifying...' : 'Verify account'}
+              </button>
+            )}
+          </div>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>

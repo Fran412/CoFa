@@ -345,15 +345,17 @@ function ProductPage() {
 
           {orderError && <p className="cofa-error-text">{orderError}</p>}
 
-          <button
-            type="button"
-            onClick={handlePayOnline}
-            disabled={payingOnline || placing}
-            className="cofa-btn cofa-btn-primary"
-            style={{ width: '100%', padding: 12, fontSize: 15, marginBottom: 10 }}
-          >
-            {payingOnline ? 'Processing payment...' : 'Pay now with Paystack'}
-          </button>
+          {merchant.paystack_subaccount_code && (
+            <button
+              type="button"
+              onClick={handlePayOnline}
+              disabled={payingOnline || placing}
+              className="cofa-btn cofa-btn-primary"
+              style={{ width: '100%', padding: 12, fontSize: 15, marginBottom: 10 }}
+            >
+              {payingOnline ? 'Processing payment...' : 'Pay now with Paystack'}
+            </button>
+          )}
 
           <button type="submit" disabled={placing || payingOnline} className="cofa-btn cofa-btn-accent" style={{ width: '100%', padding: 12, fontSize: 15 }}>
             {placing
