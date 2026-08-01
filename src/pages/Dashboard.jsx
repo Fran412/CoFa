@@ -33,6 +33,7 @@ function Dashboard() {
   const [resolvingAccount, setResolvingAccount] = useState(false)
   const [savingBank, setSavingBank] = useState(false)
   const [bankError, setBankError] = useState('')
+  const [bankList, setBankList] = useState(NIGERIAN_BANKS)
   const [settingsDescription, setSettingsDescription] = useState('')
   const [settingsWhatsapp, setSettingsWhatsapp] = useState('')
   const [settingsLogoUrl, setSettingsLogoUrl] = useState('')
@@ -81,6 +82,21 @@ function Dashboard() {
       supabase.removeChannel(channel)
     }
   }, [merchant?.id])
+
+  useEffect(() => {
+    if (!showSettings || bankList.length > NIGERIAN_BANKS.length) return
+
+    fetch('/.netlify/functions/paystack-list-banks')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.banks && data.banks.length > 0) {
+          setBankList(data.banks)
+        }
+      })
+      .catch(() => {
+        // Fetch failed -- silently keep the hardcoded fallback list, no need to alarm the merchant.
+      })
+  }, [showSettings])
 
   async function loadDashboard() {
     setLoading(true)
@@ -904,7 +920,7 @@ function Dashboard() {
               <label className="cofa-label">Bank</label>
               <select value={bankCode} onChange={(e) => { setBankCode(e.target.value); setResolvedAccountName('') }} className="cofa-input">
                 <option value="">Select your bank</option>
-                {NIGERIAN_BANKS.map((b) => (
+                {bankList.map((b) => (
                   <option key={b.code} value={b.code}>{b.name}</option>
                 ))}
               </select>
