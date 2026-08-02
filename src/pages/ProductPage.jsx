@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getLabels } from '../lib/businessTypes'
+import { getEffectiveTierKey } from '../lib/subscriptionTiers'
+import { getThemeVars, isThemeUnlocked, THEMES } from '../lib/themes'
 import { loadPaystackScript } from '../lib/paystack'
 
 function ProductPage() {
@@ -236,14 +238,19 @@ function ProductPage() {
   const outOfStock = product.stock_quantity === 0
   const labels = getLabels(merchant.business_type)
 
+  const effectiveThemeKey = isThemeUnlocked(merchant.theme, getEffectiveTierKey(merchant)) ? merchant.theme : 'basic'
+  const themeVars = getThemeVars(effectiveThemeKey)
+  const signatureClass = THEMES[effectiveThemeKey].signatureClass
+
   return (
+    <div style={{ minHeight: '100vh', background: 'var(--cofa-cream)', ...themeVars }}>
     <div className="cofa-page" style={{ maxWidth: 640 }}>
       <Link to={`/store/${slug}`} className="cofa-muted" style={{ display: 'inline-block', marginBottom: 20, fontSize: 14, textDecoration: 'none' }}>
         &larr; Back to {merchant.store_name}
       </Link>
 
-      <div className="cofa-tag-edge" />
-      <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', marginBottom: 20, overflow: 'hidden', borderRadius: '0 0 10px 10px', border: '1px solid var(--cofa-line)', borderTop: 'none' }}>
+      <div className={signatureClass} />
+      <div style={{ width: '100%', aspectRatio: '1 / 1', background: 'var(--cofa-surface)', marginBottom: 20, overflow: 'hidden', borderRadius: '0 0 10px 10px', border: '1px solid var(--cofa-line)', borderTop: 'none' }}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -364,6 +371,7 @@ function ProductPage() {
           </button>
         </form>
       )}
+    </div>
     </div>
   )
 }

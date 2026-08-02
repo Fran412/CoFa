@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { getLabels } from '../lib/businessTypes'
-import { getTierConfig } from '../lib/subscriptionTiers'
+import { getTierConfig, getEffectiveTierKey } from '../lib/subscriptionTiers'
+import { getThemeVars, isThemeUnlocked, THEMES } from '../lib/themes'
 
 function Storefront() {
   const { slug } = useParams()
@@ -58,8 +59,12 @@ function Storefront() {
 
   const labels = getLabels(merchant.business_type)
 
+  const effectiveThemeKey = isThemeUnlocked(merchant.theme, getEffectiveTierKey(merchant)) ? merchant.theme : 'basic'
+  const themeVars = getThemeVars(effectiveThemeKey)
+  const signatureClass = THEMES[effectiveThemeKey].signatureClass
+
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', ...themeVars }}>
       <header style={{
         background: 'var(--cofa-indigo)',
         color: 'var(--cofa-cream)',
@@ -102,8 +107,8 @@ function Storefront() {
                 to={`/store/${slug}/product/${p.id}`}
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <div className="cofa-tag-edge" />
-                <div style={{ border: '1px solid var(--cofa-line)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden', background: '#fff' }}>
+                <div className={signatureClass} />
+                <div style={{ border: '1px solid var(--cofa-line)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden', background: 'var(--cofa-surface)' }}>
                   <div style={{ width: '100%', aspectRatio: '1 / 1', background: 'var(--cofa-cream-dim)', overflow: 'hidden' }}>
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

@@ -7,6 +7,7 @@ import { BUSINESS_TYPES, getLabels } from '../lib/businessTypes'
 import { NIGERIAN_BANKS } from '../lib/nigerianBanks'
 import { computeInsights, computeTrends } from '../lib/insights'
 import { TIERS, getEffectiveTierKey, getTierConfig } from '../lib/subscriptionTiers'
+import { THEMES, isThemeUnlocked } from '../lib/themes'
 import { loadPaystackScript } from '../lib/paystack'
 
 function Dashboard() {
@@ -27,6 +28,7 @@ function Dashboard() {
   const [newOrderAlert, setNewOrderAlert] = useState(false)
   const [settingsStoreName, setSettingsStoreName] = useState('')
   const [settingsBusinessType, setSettingsBusinessType] = useState('retail')
+  const [settingsTheme, setSettingsTheme] = useState('basic')
   const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
   const [resolvedAccountName, setResolvedAccountName] = useState('')
@@ -123,6 +125,7 @@ function Dashboard() {
     setMerchant(merchantData)
     setSettingsStoreName(merchantData.store_name || '')
     setSettingsBusinessType(merchantData.business_type || 'retail')
+    setSettingsTheme(merchantData.theme || 'basic')
     setBankCode(merchantData.bank_code || '')
     setAccountNumber(merchantData.account_number || '')
     setResolvedAccountName(merchantData.account_name || '')
@@ -523,6 +526,7 @@ function Dashboard() {
       .update({
         store_name: settingsStoreName,
         business_type: settingsBusinessType,
+        theme: settingsTheme,
         description: settingsDescription,
         whatsapp_number: settingsWhatsapp,
         logo_url: settingsLogoUrl,
@@ -847,6 +851,43 @@ function Dashboard() {
               <small className="cofa-muted" style={{ display: 'block', marginTop: 6, fontSize: 13 }}>
                 Changes how your catalogue is labeled (e.g. "Menu" vs "Products").
               </small>
+            </div>
+
+            <div className="cofa-field">
+              <label className="cofa-label">Storefront theme</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+                {Object.entries(THEMES).map(([key, theme]) => {
+                  const unlocked = isThemeUnlocked(key, getEffectiveTierKey(merchant))
+                  const selected = settingsTheme === key
+                  return (
+                    <button
+                      type="button"
+                      key={key}
+                      onClick={() => unlocked && setSettingsTheme(key)}
+                      disabled={!unlocked}
+                      style={{
+                        textAlign: 'left',
+                        padding: 12,
+                        borderRadius: 10,
+                        border: selected ? `2px solid ${theme.vars['--cofa-marigold']}` : '1px solid var(--cofa-line)',
+                        background: unlocked ? '#fff' : 'var(--cofa-cream-dim)',
+                        cursor: unlocked ? 'pointer' : 'not-allowed',
+                        opacity: unlocked ? 1 : 0.6,
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                        <span style={{ width: 18, height: 18, borderRadius: '50%', background: theme.vars['--cofa-indigo'] }} />
+                        <span style={{ width: 18, height: 18, borderRadius: '50%', background: theme.vars['--cofa-marigold'] }} />
+                        <span style={{ width: 18, height: 18, borderRadius: '50%', background: theme.vars['--cofa-jade'] }} />
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--cofa-indigo)' }}>{theme.name}</div>
+                      <div className="cofa-muted" style={{ fontSize: 12, marginTop: 2 }}>
+                        {unlocked ? theme.description : `Requires ${TIERS[theme.requiredTier].name}`}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div className="cofa-field">

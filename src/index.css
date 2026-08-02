@@ -11,6 +11,7 @@
   --cofa-ink: #21242B;
   --cofa-ink-soft: #5B5F6B;
   --cofa-line: #E4DCC9;
+  --cofa-surface: #FFFFFF;
 
   /* Type */
   --font-display: 'Space Grotesk', sans-serif;
@@ -163,7 +164,7 @@ button, input, textarea, select {
 }
 
 .cofa-card {
-  background: #fff;
+  background: var(--cofa-surface);
   border: 1px solid var(--cofa-line);
   border-radius: 12px;
   padding: var(--space-5);
@@ -216,8 +217,34 @@ button, input, textarea, select {
 .cofa-tag-edge {
   height: 10px;
   background:
-    radial-gradient(circle at 10px 0, transparent 5px, #ffffff 5.5px) repeat-x;
+    radial-gradient(circle at 10px 0, transparent 5px, var(--cofa-surface) 5.5px) repeat-x;
   background-size: 20px 10px;
+  margin-bottom: -1px;
+}
+
+/* Aso-Oke signature: woven strip bands, referencing the narrow sewn strips
+   the cloth is actually constructed from */
+.cofa-tag-edge--aso-oke {
+  height: 8px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--cofa-marigold) 0px, var(--cofa-marigold) 6px,
+    var(--cofa-jade) 6px, var(--cofa-jade) 12px,
+    var(--cofa-clay) 12px, var(--cofa-clay) 18px
+  );
+  margin-bottom: -1px;
+}
+
+/* Calabash signature: fine etched linework, referencing carved gourd
+   decoration */
+.cofa-tag-edge--calabash {
+  height: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--cofa-marigold) 0px, var(--cofa-marigold) 2px,
+    transparent 2px, transparent 8px
+  );
+  opacity: 0.75;
   margin-bottom: -1px;
 }
 
