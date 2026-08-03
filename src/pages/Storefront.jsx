@@ -67,6 +67,7 @@ function Storefront() {
     <div style={{ minHeight: '100vh', ...themeVars }}>
       <header style={{
         background: 'var(--cofa-indigo)',
+        backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 2px, transparent 2px, transparent 14px)',
         color: 'var(--cofa-cream)',
         padding: '48px 24px 56px',
         textAlign: 'center',
@@ -79,9 +80,9 @@ function Storefront() {
           />
         )}
         <h1 style={{ fontSize: 32, marginBottom: 8 }}>{merchant.store_name}</h1>
-        {merchant.description && (
-          <p style={{ opacity: 0.85, maxWidth: 440, margin: '0 auto', lineHeight: 1.5 }}>{merchant.description}</p>
-        )}
+        <p style={{ opacity: 0.85, maxWidth: 440, margin: '0 auto', lineHeight: 1.5 }}>
+          {merchant.description || labels.tagline}
+        </p>
         {merchant.whatsapp_number && (
           <a
             href={`https://wa.me/${merchant.whatsapp_number.replace(/\D/g, '')}`}

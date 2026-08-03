@@ -14,6 +14,7 @@ const LABELS = {
     trackStockDefault: true,
     addressLabel: 'Delivery address (optional)',
     orderVerb: 'order',
+    tagline: 'Quality picks, delivered to you',
   },
   food: {
     itemSingular: 'Menu item',
@@ -23,6 +24,7 @@ const LABELS = {
     trackStockDefault: false,
     addressLabel: 'Delivery address (optional)',
     orderVerb: 'order',
+    tagline: 'Freshly made, ready to order',
   },
   service: {
     itemSingular: 'Service',
@@ -32,6 +34,7 @@ const LABELS = {
     trackStockDefault: false,
     addressLabel: 'Notes / preferred date & time (optional)',
     orderVerb: 'booking',
+    tagline: 'Book with confidence',
   },
   fitness: {
     itemSingular: 'Class / plan',
@@ -41,6 +44,7 @@ const LABELS = {
     trackStockDefault: false,
     addressLabel: 'Notes / preferred date & time (optional)',
     orderVerb: 'booking',
+    tagline: 'Train hard, book your next session',
   },
 }
 

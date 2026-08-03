@@ -7,7 +7,7 @@ import { BUSINESS_TYPES, getLabels } from '../lib/businessTypes'
 import { NIGERIAN_BANKS } from '../lib/nigerianBanks'
 import { computeInsights, computeTrends } from '../lib/insights'
 import { TIERS, getEffectiveTierKey, getTierConfig } from '../lib/subscriptionTiers'
-import { THEMES, isThemeUnlocked } from '../lib/themes'
+import { THEMES, isThemeUnlocked, getThemeCatalog } from '../lib/themes'
 import { loadPaystackScript } from '../lib/paystack'
 
 function Dashboard() {
@@ -841,7 +841,7 @@ function Dashboard() {
               <label className="cofa-label">Business type</label>
               <select
                 value={settingsBusinessType}
-                onChange={(e) => setSettingsBusinessType(e.target.value)}
+                onChange={(e) => { setSettingsBusinessType(e.target.value); setSettingsTheme('basic') }}
                 className="cofa-input"
               >
                 {BUSINESS_TYPES.map((t) => (
@@ -856,7 +856,7 @@ function Dashboard() {
             <div className="cofa-field">
               <label className="cofa-label">Storefront theme</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-                {Object.entries(THEMES).map(([key, theme]) => {
+                {getThemeCatalog(settingsBusinessType).map(([key, theme]) => {
                   const unlocked = isThemeUnlocked(key, getEffectiveTierKey(merchant))
                   const selected = settingsTheme === key
                   return (

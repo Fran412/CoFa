@@ -222,9 +222,8 @@ button, input, textarea, select {
   margin-bottom: -1px;
 }
 
-/* Aso-Oke signature: woven strip bands, referencing the narrow sewn strips
-   the cloth is actually constructed from */
-.cofa-tag-edge--aso-oke {
+/* Stripe signature (all Pro-tier themes): woven strip bands */
+.cofa-tag-edge--stripe {
   height: 8px;
   background: repeating-linear-gradient(
     90deg,
@@ -235,9 +234,8 @@ button, input, textarea, select {
   margin-bottom: -1px;
 }
 
-/* Calabash signature: fine etched linework, referencing carved gourd
-   decoration */
-.cofa-tag-edge--calabash {
+/* Etched signature (all Growth-tier themes): fine linework */
+.cofa-tag-edge--etched {
   height: 8px;
   background: repeating-linear-gradient(
     45deg,
