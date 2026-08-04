@@ -41,6 +41,9 @@ function Dashboard() {
   const [settingsLogoUrl, setSettingsLogoUrl] = useState('')
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsError, setSettingsError] = useState('')
+  const [generatingTagline, setGeneratingTagline] = useState(false)
+  const [generatingDescription, setGeneratingDescription] = useState(false)
+  const [aiError, setAiError] = useState('')
 
   // product form state
   const [showForm, setShowForm] = useState(false)
@@ -510,6 +513,67 @@ function Dashboard() {
     loadDashboard()
   }
 
+  async function handleGenerateTagline() {
+    setAiError('')
+    setGeneratingTagline(true)
+
+    const { data: { session } } = await supabase.auth.getSession()
+
+    const res = await fetch('/.netlify/functions/generate-copy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        mode: 'tagline',
+        productNames: products.map((p) => p.name),
+      }),
+    })
+    const data = await res.json()
+
+    setGeneratingTagline(false)
+
+    if (!res.ok) {
+      setAiError(data.error || 'Could not generate a tagline.')
+      return
+    }
+
+    setSettingsDescription(data.text)
+  }
+
+  async function handleGenerateProductDescription() {
+    setAiError('')
+
+    if (!formName) {
+      setAiError('Enter a product name first.')
+      return
+    }
+
+    setGeneratingDescription(true)
+
+    const { data: { session } } = await supabase.auth.getSession()
+
+    const res = await fetch('/.netlify/functions/generate-copy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ mode: 'product', productName: formName }),
+    })
+    const data = await res.json()
+
+    setGeneratingDescription(false)
+
+    if (!res.ok) {
+      setAiError(data.error || 'Could not generate a description.')
+      return
+    }
+
+    setFormDescription(data.text)
+  }
+
   async function handleSettingsSubmit(e) {
     e.preventDefault()
     setSettingsError('')
@@ -899,6 +963,22 @@ function Dashboard() {
                 rows={3}
                 className="cofa-textarea"
               />
+              {getEffectiveTierKey(merchant) === 'basic' ? (
+                <small className="cofa-muted" style={{ display: 'block', marginTop: 6, fontSize: 13 }}>
+                  Upgrade to Pro to generate a tailored tagline with AI.
+                </small>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleGenerateTagline}
+                  disabled={generatingTagline}
+                  className="cofa-btn cofa-btn-ghost"
+                  style={{ marginTop: 8, fontSize: 13, padding: '6px 12px' }}
+                >
+                  {generatingTagline ? 'Generating...' : 'Generate with AI'}
+                </button>
+              )}
+              {aiError && <p className="cofa-error-text" style={{ fontSize: 13, marginTop: 6 }}>{aiError}</p>}
             </div>
 
             <div className="cofa-field">
@@ -1129,6 +1209,21 @@ function Dashboard() {
             <div className="cofa-field">
               <label className="cofa-label">Description</label>
               <textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} rows={3} className="cofa-textarea" />
+              {getEffectiveTierKey(merchant) === 'basic' ? (
+                <small className="cofa-muted" style={{ display: 'block', marginTop: 6, fontSize: 13 }}>
+                  Upgrade to Pro to generate descriptions with AI.
+                </small>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleGenerateProductDescription}
+                  disabled={generatingDescription}
+                  className="cofa-btn cofa-btn-ghost"
+                  style={{ marginTop: 8, fontSize: 13, padding: '6px 12px' }}
+                >
+                  {generatingDescription ? 'Generating...' : 'Suggest with AI'}
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>
